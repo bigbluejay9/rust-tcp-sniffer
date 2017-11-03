@@ -42,7 +42,16 @@ fn start_sniffing(lis: &SocketAddr, fwd: &SocketAddr) -> Result<(), std::io::Err
             match event.token() {
                 SERVER => {
                     let conn = listener.accept()?;
-                    handle_new_connection(conn, &poll, token_counter, &mut event_map, fwd)?;
+                    match handle_new_connection(conn, &poll, token_counter, &mut event_map, fwd) {
+                        Err(ref e) => {
+                            warn!(
+                                "Dropping connection: destination {:?} not available: {}.",
+                                fwd,
+                                e.to_string()
+                            )
+                        }
+                        _ => {}
+                    }
                     token_counter += 2;
                 }
                 // Fowarding
